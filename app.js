@@ -20,7 +20,7 @@ const buildRequestBody = (history) => ({
   })),
 });
 
-const sendMessage = async (apiKey, text) => {
+const sendMessage = async (apiKey) => {
   const url =
     "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=" +
     encodeURIComponent(apiKey);
@@ -78,7 +78,7 @@ $("#chatForm").on("submit", async (event) => {
   const typingMessage = $("#chatWindow .message.bot").last();
 
   try {
-    const reply = await sendMessage(apiKey, userText);
+    const reply = await sendMessage(apiKey);
     typingMessage.remove();
     const finalReply = reply || "I did not get a response. Try again.";
     addMessage(finalReply, "bot");
