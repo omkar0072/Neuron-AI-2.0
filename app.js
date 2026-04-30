@@ -75,7 +75,14 @@ const sendMessage = async (apiKey) => {
   }
 
   const data = await response.json();
-  return data.choices?.[0]?.message?.content?.trim() || "";
+  const message = data?.choices?.[0]?.message?.content;
+
+  if (!message) {
+    console.warn("Unexpected API response format.", data);
+    return "";
+  }
+
+  return message.trim();
 };
 
 $("#chatForm").on("submit", async (event) => {
@@ -122,7 +129,7 @@ $("#chatForm").on("submit", async (event) => {
 });
 
 $("#newChatBtn").on("click", () => {
-  chatHistory.splice(0, chatHistory.length);
+  chatHistory.length = 0;
   $("#chatWindow").empty();
   addMessage("New chat started. Ask me anything!", "system");
 });
