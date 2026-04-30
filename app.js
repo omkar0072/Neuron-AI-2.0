@@ -13,6 +13,29 @@ const setLoading = (isLoading) => {
   $("#userInput").prop("disabled", isLoading);
 };
 
+const getFriendlyErrorMessage = (error) => {
+  const statusMatch = error.message.match(/HTTP (\d{3})/);
+  const statusCode = statusMatch ? Number(statusMatch[1]) : null;
+
+  if (statusCode === 401 || statusCode === 403) {
+    return "Authentication failed. Check your API key.";
+  }
+
+  if (statusCode === 429) {
+    return "Rate limit reached. Please wait and try again.";
+  }
+
+  if (statusCode && statusCode >= 500) {
+    return "The API server had an issue. Please try again later.";
+  }
+
+  if (error.message.toLowerCase().includes("failed to fetch")) {
+    return "Network error. Check your internet connection and try again.";
+  }
+
+  return "Sorry, there was an error. Check your API key and try again.";
+};
+
 const buildRequestBody = (history) => ({
   model: "openai/gpt-3.5-turbo",
   messages: history,
@@ -90,10 +113,7 @@ $("#chatForm").on("submit", async (event) => {
     }
   } catch (error) {
     typingMessage.remove();
-    addMessage(
-      "Sorry, there was an error. Check your API key and try again.",
-      "system"
-    );
+    addMessage(getFriendlyErrorMessage(error), "system");
     console.error(error);
   } finally {
     setLoading(false);
@@ -101,7 +121,7 @@ $("#chatForm").on("submit", async (event) => {
 });
 
 $("#newChatBtn").on("click", () => {
-  chatHistory.length = 0;
+  chatHistory.splice(0);
   $("#chatWindow").empty();
   addMessage("New chat started. Ask me anything!", "system");
 });
