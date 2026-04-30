@@ -14,28 +14,27 @@ const setLoading = (isLoading) => {
 };
 
 const buildRequestBody = (history) => ({
-  contents: history.map((entry) => ({
-    role: entry.role,
-    parts: [{ text: entry.text }],
-  })),
+  model: "openai/gpt-3.5-turbo",
+  messages: history,
 });
 
 const sendMessage = async (apiKey) => {
-  const url =
-    "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent";
+  const url = "https://openrouter.ai/api/v1/chat/completions";
 
   const response = await fetch(url, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
-      "x-goog-api-key": apiKey,
+      Authorization: `Bearer ${apiKey}`,
+      "HTTP-Referer": window.location.href,
+      "X-Title": "Neuron AI Chatbot",
     },
     body: JSON.stringify(buildRequestBody(chatHistory)),
   });
 
   if (!response.ok) {
     const errorBody = await response.text();
-    let errorMessage = `Failed to connect to Gemini API (HTTP ${response.status}).`;
+    let errorMessage = `Failed to connect to OpenRouter API (HTTP ${response.status}).`;
 
     try {
       const errorData = JSON.parse(errorBody);
@@ -52,13 +51,7 @@ const sendMessage = async (apiKey) => {
   }
 
   const data = await response.json();
-  const candidate = data.candidates?.[0];
-  const parts = candidate?.content?.parts || [];
-  return parts
-    .map((part) => part.text)
-    .filter(Boolean)
-    .join(" ")
-    .trim();
+  return data.choices?.[0]?.message?.content?.trim() || "";
 };
 
 $("#chatForm").on("submit", async (event) => {
@@ -76,7 +69,7 @@ $("#chatForm").on("submit", async (event) => {
   }
 
   addMessage(userText, "user");
-  chatHistory.push({ role: "user", text: userText });
+  chatHistory.push({ role: "user", content: userText });
   $("#userInput").val("");
 
   setLoading(true);
@@ -88,7 +81,7 @@ $("#chatForm").on("submit", async (event) => {
     typingMessage.remove();
     if (reply) {
       addMessage(reply, "bot");
-      chatHistory.push({ role: "model", text: reply });
+      chatHistory.push({ role: "assistant", content: reply });
     } else {
       addMessage(
         "The AI returned an empty response. Please try rephrasing your question.",
@@ -105,4 +98,10 @@ $("#chatForm").on("submit", async (event) => {
   } finally {
     setLoading(false);
   }
+});
+
+$("#newChatBtn").on("click", () => {
+  chatHistory.length = 0;
+  $("#chatWindow").empty();
+  addMessage("New chat started. Ask me anything!", "system");
 });
