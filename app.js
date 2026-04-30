@@ -121,7 +121,7 @@ $("#chatForm").on("submit", async (event) => {
 });
 
 $("#newChatBtn").on("click", () => {
-  chatHistory.splice(0);
+  chatHistory.splice(0, chatHistory.length);
   $("#chatWindow").empty();
   addMessage("New chat started. Ask me anything!", "system");
 });
