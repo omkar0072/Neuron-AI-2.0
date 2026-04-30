@@ -32,8 +32,21 @@ const sendMessage = async (apiKey, text) => {
   });
 
   if (!response.ok) {
-    const errorText = await response.text();
-    throw new Error(errorText || "Request failed.");
+    const errorBody = await response.text();
+    let errorMessage = `Failed to connect to Gemini API (HTTP ${response.status}).`;
+
+    try {
+      const errorData = JSON.parse(errorBody);
+      if (errorData?.error?.message) {
+        errorMessage = `${errorData.error.message} (HTTP ${response.status}).`;
+      }
+    } catch (parseError) {
+      if (errorBody) {
+        errorMessage = `${errorBody} (HTTP ${response.status}).`;
+      }
+    }
+
+    throw new Error(errorMessage);
   }
 
   const data = await response.json();
@@ -72,10 +85,7 @@ $("#chatForm").on("submit", async (event) => {
     chatHistory.push({ role: "model", text: finalReply });
   } catch (error) {
     typingMessage.remove();
-    addMessage(
-      "Sorry, there was an error. Check your API key and internet connection.",
-      "system"
-    );
+    addMessage(`Sorry, there was an error: ${error.message}`, "system");
     console.error(error);
   } finally {
     setLoading(false);
