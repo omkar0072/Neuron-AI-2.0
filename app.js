@@ -17,6 +17,9 @@ const setLoading = (isLoading) => {
 const getFriendlyErrorMessage = (error) => {
   const statusMatch = error.message.match(/HTTP (\d{3})/);
   const statusCode = statusMatch ? Number(statusMatch[1]) : null;
+  const isNetworkError =
+    error.name === "TypeError" ||
+    /network|failed to fetch|load failed/i.test(error.message);
 
   if (statusCode === 401 || statusCode === 403) {
     return "Authentication failed. Check your API key.";
@@ -30,8 +33,12 @@ const getFriendlyErrorMessage = (error) => {
     return "The API server had an issue. Please try again later.";
   }
 
-  if (error.message.toLowerCase().includes("failed to fetch")) {
+  if (isNetworkError) {
     return "Network error. Check your internet connection and try again.";
+  }
+
+  if (error.message.toLowerCase().includes("unexpected api response")) {
+    return "Unexpected response from the API. Please try again.";
   }
 
   return "Sorry, there was an error. Check your API key and try again.";
@@ -58,7 +65,7 @@ const sendMessage = async (apiKey) => {
 
   if (!response.ok) {
     const errorBody = await response.text();
-    let errorMessage = `Failed to connect to OpenRouter API (HTTP ${response.status}).`;
+    let errorMessage = `OpenRouter API request failed (HTTP ${response.status}).`;
 
     try {
       const errorData = JSON.parse(errorBody);
@@ -79,7 +86,7 @@ const sendMessage = async (apiKey) => {
 
   if (!message) {
     console.warn("Unexpected API response format.", data);
-    return "";
+    throw new Error("Unexpected API response.");
   }
 
   return message.trim();
