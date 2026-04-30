@@ -22,12 +22,14 @@ const buildRequestBody = (history) => ({
 
 const sendMessage = async (apiKey) => {
   const url =
-    "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=" +
-    encodeURIComponent(apiKey);
+    "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent";
 
   const response = await fetch(url, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers: {
+      "Content-Type": "application/json",
+      "x-goog-api-key": apiKey,
+    },
     body: JSON.stringify(buildRequestBody(chatHistory)),
   });
 
@@ -80,7 +82,9 @@ $("#chatForm").on("submit", async (event) => {
   try {
     const reply = await sendMessage(apiKey);
     typingMessage.remove();
-    const finalReply = reply || "I did not get a response. Try again.";
+    const finalReply =
+      reply ||
+      "The AI returned an empty response. Please try rephrasing your question.";
     addMessage(finalReply, "bot");
     chatHistory.push({ role: "model", text: finalReply });
   } catch (error) {
