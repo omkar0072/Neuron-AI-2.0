@@ -15,8 +15,7 @@ const setLoading = (isLoading) => {
 };
 
 const getFriendlyErrorMessage = (error) => {
-  const statusMatch = error.message.match(/HTTP (\d{3})/);
-  const statusCode = statusMatch ? Number(statusMatch[1]) : null;
+  const statusCode = error.statusCode || null;
   const isNetworkError =
     error.name === "TypeError" ||
     /network|failed to fetch|load failed/i.test(error.message);
@@ -65,7 +64,7 @@ const sendMessage = async (apiKey) => {
 
   if (!response.ok) {
     const errorBody = await response.text();
-    let errorMessage = `OpenRouter API request failed (HTTP ${response.status}).`;
+    let errorMessage = `OpenRouter API request failed.`;
 
     try {
       const errorData = JSON.parse(errorBody);
@@ -78,7 +77,9 @@ const sendMessage = async (apiKey) => {
       }
     }
 
-    throw new Error(errorMessage);
+    const requestError = new Error(errorMessage);
+    requestError.statusCode = response.status;
+    throw requestError;
   }
 
   const data = await response.json();
@@ -121,10 +122,10 @@ $("#chatForm").on("submit", async (event) => {
       addMessage(reply, "bot");
       chatHistory.push({ role: "assistant", content: reply });
     } else {
-      addMessage(
-        "The AI returned an empty response. Please try rephrasing your question.",
-        "system"
-      );
+      const emptyMessage =
+        "The AI returned an empty response. Please try rephrasing your question.";
+      addMessage(emptyMessage, "system");
+      chatHistory.push({ role: "system", content: emptyMessage });
     }
   } catch (error) {
     typingMessage.remove();
