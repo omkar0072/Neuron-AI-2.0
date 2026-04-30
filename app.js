@@ -54,7 +54,11 @@ const sendMessage = async (apiKey) => {
   const data = await response.json();
   const candidate = data.candidates?.[0];
   const parts = candidate?.content?.parts || [];
-  return parts.map((part) => part.text).join(" ").trim();
+  return parts
+    .map((part) => part.text)
+    .filter(Boolean)
+    .join(" ")
+    .trim();
 };
 
 $("#chatForm").on("submit", async (event) => {
@@ -82,11 +86,15 @@ $("#chatForm").on("submit", async (event) => {
   try {
     const reply = await sendMessage(apiKey);
     typingMessage.remove();
-    const finalReply =
-      reply ||
-      "The AI returned an empty response. Please try rephrasing your question.";
-    addMessage(finalReply, "bot");
-    chatHistory.push({ role: "model", text: finalReply });
+    if (reply) {
+      addMessage(reply, "bot");
+      chatHistory.push({ role: "model", text: reply });
+    } else {
+      addMessage(
+        "The AI returned an empty response. Please try rephrasing your question.",
+        "system"
+      );
+    }
   } catch (error) {
     typingMessage.remove();
     addMessage(`Sorry, there was an error: ${error.message}`, "system");
