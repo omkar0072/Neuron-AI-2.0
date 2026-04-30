@@ -1,3 +1,4 @@
+const DEFAULT_MODEL = "openai/gpt-3.5-turbo";
 const chatHistory = [];
 
 const addMessage = (text, type) => {
@@ -37,7 +38,7 @@ const getFriendlyErrorMessage = (error) => {
 };
 
 const buildRequestBody = (history) => ({
-  model: "openai/gpt-3.5-turbo",
+  model: DEFAULT_MODEL,
   messages: history,
 });
 
