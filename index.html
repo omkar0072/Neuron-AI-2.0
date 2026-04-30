@@ -1,0 +1,472 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Neuron AI Chatbot</title>
+
+  <!-- Bootstrap 5 CSS -->
+  <link
+    rel="stylesheet"
+    href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
+  />
+
+  <!-- Google Fonts -->
+  <link
+    href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap"
+    rel="stylesheet"
+  />
+
+  <style>
+    /* ── Page background ── */
+    body {
+      background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+      min-height: 100vh;
+      font-family: "Poppins", sans-serif;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+
+    /* ── Card wrapper ── */
+    .chat-card {
+      width: 100%;
+      max-width: 700px;
+      border-radius: 20px;
+      overflow: hidden;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+    }
+
+    /* ── Header ── */
+    .chat-header {
+      background: linear-gradient(90deg, #6c63ff, #48cae4);
+      padding: 18px 24px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .bot-avatar {
+      width: 46px;
+      height: 46px;
+      background: rgba(255, 255, 255, 0.25);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 22px;
+    }
+
+    .chat-header h5 {
+      margin: 0;
+      color: #fff;
+      font-weight: 600;
+      font-size: 1.1rem;
+    }
+
+    .chat-header small {
+      color: rgba(255, 255, 255, 0.85);
+      font-size: 0.75rem;
+    }
+
+    .status-dot {
+      width: 10px;
+      height: 10px;
+      background: #4ade80;
+      border-radius: 50%;
+      display: inline-block;
+      margin-right: 5px;
+      animation: pulse 1.5s infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50%       { opacity: 0.4; }
+    }
+
+    /* ── Message area ── */
+    #chatBox {
+      background: #0d1b2a;
+      height: 420px;
+      overflow-y: auto;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      scroll-behavior: smooth;
+    }
+
+    /* Custom scrollbar */
+    #chatBox::-webkit-scrollbar { width: 5px; }
+    #chatBox::-webkit-scrollbar-track { background: transparent; }
+    #chatBox::-webkit-scrollbar-thumb { background: #6c63ff; border-radius: 10px; }
+
+    /* ── Individual message ── */
+    .message {
+      display: flex;
+      gap: 10px;
+      max-width: 85%;
+      animation: fadeIn 0.3s ease;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(8px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Bot message – left aligned */
+    .message.bot-message {
+      align-self: flex-start;
+      flex-direction: row;
+    }
+
+    /* User message – right aligned */
+    .message.user-message {
+      align-self: flex-end;
+      flex-direction: row-reverse;
+    }
+
+    /* Avatar icon inside message */
+    .msg-avatar {
+      width: 34px;
+      height: 34px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 16px;
+      flex-shrink: 0;
+    }
+
+    .bot-message .msg-avatar { background: linear-gradient(135deg, #6c63ff, #48cae4); }
+    .user-message .msg-avatar { background: linear-gradient(135deg, #f093fb, #f5576c); }
+
+    /* Bubble */
+    .msg-bubble {
+      padding: 10px 15px;
+      border-radius: 18px;
+      font-size: 0.9rem;
+      line-height: 1.55;
+      word-wrap: break-word;
+    }
+
+    .bot-message  .msg-bubble { background: #1e2a3a; color: #e0e6f0; border-bottom-left-radius: 4px; }
+    .user-message .msg-bubble { background: linear-gradient(135deg, #6c63ff, #48cae4); color: #fff; border-bottom-right-radius: 4px; }
+
+    /* ── Typing indicator ── */
+    .typing-indicator {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      padding: 10px 15px;
+      background: #1e2a3a;
+      border-radius: 18px;
+      border-bottom-left-radius: 4px;
+      width: fit-content;
+    }
+
+    .typing-indicator span {
+      width: 8px;
+      height: 8px;
+      background: #6c63ff;
+      border-radius: 50%;
+      animation: bounce 1.2s infinite;
+    }
+
+    .typing-indicator span:nth-child(2) { animation-delay: 0.2s; }
+    .typing-indicator span:nth-child(3) { animation-delay: 0.4s; }
+
+    @keyframes bounce {
+      0%, 80%, 100% { transform: translateY(0);   }
+      40%            { transform: translateY(-8px); }
+    }
+
+    /* ── Input area ── */
+    .chat-input-area {
+      background: #0d1b2a;
+      padding: 16px 20px;
+      border-top: 1px solid #1e2a3a;
+    }
+
+    #userInput {
+      background: #1e2a3a;
+      border: 1px solid #2d3f55;
+      border-radius: 25px;
+      color: #e0e6f0;
+      padding: 10px 20px;
+      font-size: 0.9rem;
+      transition: border-color 0.2s;
+    }
+
+    #userInput::placeholder { color: #6b7a8d; }
+    #userInput:focus {
+      outline: none;
+      border-color: #6c63ff;
+      box-shadow: 0 0 0 3px rgba(108, 99, 255, 0.2);
+      background: #1e2a3a;
+      color: #e0e6f0;
+    }
+
+    #sendBtn {
+      background: linear-gradient(135deg, #6c63ff, #48cae4);
+      border: none;
+      border-radius: 50%;
+      width: 46px;
+      height: 46px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+      cursor: pointer;
+      transition: transform 0.2s, opacity 0.2s;
+      flex-shrink: 0;
+    }
+
+    #sendBtn:hover  { transform: scale(1.1); }
+    #sendBtn:active { transform: scale(0.95); }
+    #sendBtn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+
+    /* ── Footer note ── */
+    .chat-footer {
+      background: #0d1b2a;
+      text-align: center;
+      padding: 8px;
+      font-size: 0.7rem;
+      color: #3d5166;
+    }
+  </style>
+</head>
+
+<body>
+
+  <div class="chat-card">
+
+    <!-- ── Header ── -->
+    <div class="chat-header">
+      <div class="bot-avatar">🤖</div>
+      <div>
+        <h5>Neuron AI</h5>
+        <small><span class="status-dot"></span>Online · Powered by Gemini</small>
+      </div>
+    </div>
+
+    <!-- ── Message area ── -->
+    <div id="chatBox">
+      <!-- Welcome message added by JS on load -->
+    </div>
+
+    <!-- ── Input area ── -->
+    <div class="chat-input-area">
+      <div class="d-flex gap-2 align-items-center">
+        <input
+          type="text"
+          id="userInput"
+          class="form-control"
+          placeholder="Type a message…"
+          autocomplete="off"
+        />
+        <button id="sendBtn" title="Send">➤</button>
+      </div>
+    </div>
+
+    <!-- ── Footer ── -->
+    <div class="chat-footer">
+      Neuron AI 2.0 · Google Gemini · For educational purposes only
+    </div>
+
+  </div><!-- /chat-card -->
+
+  <!-- Bootstrap 5 JS Bundle -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <!-- jQuery -->
+  <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+
+  <script>
+    // ─────────────────────────────────────────────
+    //  Configuration
+    //  NOTE: For a production app the API key should
+    //  live on a backend/server side, not in the browser.
+    //  This is kept here for educational / demo purposes.
+    // ─────────────────────────────────────────────
+    const API_KEY   = "AIzaSyA-PTieLR3B88ojhRG9Y9c3uzzbxqf6NDM";
+    const API_URL   =
+      "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=" +
+      API_KEY;
+
+    // Conversation history sent to the API (keeps context)
+    let conversationHistory = [];
+
+    // ─────────────────────────────────────────────
+    //  Helper: escape special HTML characters to
+    //  prevent XSS when inserting user / API text
+    // ─────────────────────────────────────────────
+    function escapeHTML(str) {
+      return $("<div>").text(str).html();
+    }
+
+    // ─────────────────────────────────────────────
+    //  Helper: append a message bubble to #chatBox
+    // ─────────────────────────────────────────────
+    function appendMessage(text, sender) {
+      const isBot       = sender === "bot";
+      const avatarIcon  = isBot ? "🤖" : "👤";
+      const msgClass    = isBot ? "bot-message" : "user-message";
+
+      // Escape all text before putting it into the DOM to prevent XSS.
+      // For bot messages we also convert newlines to <br> for readability.
+      const safeText = isBot
+        ? escapeHTML(text).replace(/\n/g, "<br>")
+        : escapeHTML(text);
+
+      const messageHTML = `
+        <div class="message ${msgClass}">
+          <div class="msg-avatar">${avatarIcon}</div>
+          <div class="msg-bubble">${safeText}</div>
+        </div>`;
+
+      $("#chatBox").append(messageHTML);
+      scrollToBottom();
+    }
+
+    // ─────────────────────────────────────────────
+    //  Helper: show / remove typing indicator
+    // ─────────────────────────────────────────────
+    function showTyping() {
+      const typingHTML = `
+        <div class="message bot-message" id="typingMsg">
+          <div class="msg-avatar">🤖</div>
+          <div class="typing-indicator">
+            <span></span><span></span><span></span>
+          </div>
+        </div>`;
+      $("#chatBox").append(typingHTML);
+      scrollToBottom();
+    }
+
+    function hideTyping() {
+      $("#typingMsg").remove();
+    }
+
+    // ─────────────────────────────────────────────
+    //  Helper: auto-scroll chat to bottom
+    // ─────────────────────────────────────────────
+    function scrollToBottom() {
+      const box = document.getElementById("chatBox");
+      box.scrollTop = box.scrollHeight;
+    }
+
+    // ─────────────────────────────────────────────
+    //  Core: send user message → call Gemini API
+    // ─────────────────────────────────────────────
+    function sendMessage() {
+      const userText = $("#userInput").val().trim();
+
+      // Don't send empty messages
+      if (!userText) return;
+
+      // Show user bubble
+      appendMessage(userText, "user");
+
+      // Clear input and disable send button while waiting
+      $("#userInput").val("");
+      $("#sendBtn").prop("disabled", true);
+
+      // Add to conversation history
+      conversationHistory.push({
+        role: "user",
+        parts: [{ text: userText }]
+      });
+
+      // Show typing dots
+      showTyping();
+
+      // Build the request body for Gemini API
+      const requestBody = {
+        contents: conversationHistory
+      };
+
+      // Call Gemini API using jQuery $.ajax
+      $.ajax({
+        url:         API_URL,
+        type:        "POST",
+        contentType: "application/json",
+        data:        JSON.stringify(requestBody),
+        success: function (response) {
+          hideTyping();
+
+          // Validate the API response structure before accessing nested props
+          if (
+            !response.candidates ||
+            !response.candidates.length ||
+            !response.candidates[0].content ||
+            !response.candidates[0].content.parts ||
+            !response.candidates[0].content.parts.length
+          ) {
+            appendMessage("Sorry, I received an unexpected response. Please try again.", "bot");
+            return;
+          }
+
+          // Extract the reply text from the API response
+          const botReply = response.candidates[0].content.parts[0].text;
+
+          // Add bot reply to conversation history
+          conversationHistory.push({
+            role:  "model",
+            parts: [{ text: botReply }]
+          });
+
+          // Display bot reply (newlines are converted to <br> inside appendMessage)
+          appendMessage(botReply, "bot");
+        },
+        error: function (xhr) {
+          hideTyping();
+
+          // Show a friendly error message
+          let errMsg = "Oops! Something went wrong. Please try again.";
+          if (xhr.status === 400) {
+            errMsg = "Bad request – please check the API key or prompt.";
+          } else if (xhr.status === 429) {
+            errMsg = "Too many requests. Please wait a moment and try again.";
+          }
+          appendMessage(errMsg, "bot");
+        },
+        complete: function () {
+          // Re-enable send button
+          $("#sendBtn").prop("disabled", false);
+          $("#userInput").focus();
+        }
+      });
+    }
+
+    // ─────────────────────────────────────────────
+    //  Event listeners
+    // ─────────────────────────────────────────────
+
+    // Click on send button
+    $("#sendBtn").on("click", function () {
+      sendMessage();
+    });
+
+    // Press Enter key in the input box
+    $("#userInput").on("keydown", function (e) {
+      if (e.key === "Enter" && !e.shiftKey) {
+        e.preventDefault();
+        sendMessage();
+      }
+    });
+
+    // ─────────────────────────────────────────────
+    //  Init: show welcome message when page loads
+    // ─────────────────────────────────────────────
+    $(document).ready(function () {
+      appendMessage(
+        "👋 Hello! I'm Neuron AI, your intelligent assistant.\nAsk me anything — I'm here to help!",
+        "bot"
+      );
+      $("#userInput").focus();
+    });
+  </script>
+
+</body>
+</html>
