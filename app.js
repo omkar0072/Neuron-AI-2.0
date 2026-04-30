@@ -97,7 +97,10 @@ $("#chatForm").on("submit", async (event) => {
     }
   } catch (error) {
     typingMessage.remove();
-    addMessage(`Sorry, there was an error: ${error.message}`, "system");
+    addMessage(
+      "Sorry, there was an error. Check your API key and try again.",
+      "system"
+    );
     console.error(error);
   } finally {
     setLoading(false);
